@@ -1,0 +1,172 @@
+// Copyright (c) 2024 ESET
+// See LICENSE file for redistribution.
+
+syntax = "proto3";
+
+package user.v1;
+
+import "google/api/annotations.proto";  
+
+option go_package = "github.com/eset/grpc-rest-proxy/cmd/examples/grpcserver/proto";
+
+service UserService {
+    rpc GetUser( GetUserRequest ) returns ( GetUserResponse ) {
+        option(google.api.http) = {
+            get: "/api/user/{username}"
+            body: "*"
+        };
+    }
+
+    rpc GetUsers( GetUserRequest ) returns ( GetUsersResponse ) {
+        option(google.api.http) = {
+            get: "/api/users/{username}"
+            additional_bindings {
+              get: "/api/users/{username}/country/{country}"
+          }
+        };
+    }
+
+    rpc GetUsersByJobTitle ( GetUserRequest ) returns ( GetUsersResponse ) {
+        option(google.api.http) = {
+            get: "/api/users/job/{job.job_title=/*/}"
+        };
+    }
+    
+    rpc FilterUsers( FilterUserRequest ) returns ( GetUsersResponse ) {
+        option(google.api.http) = {
+            get: "/api/users/filter"
+        };
+    }
+
+    rpc GetUsersPost ( GetUserPostRequest ) returns ( GetUserPostResponse ) {
+        option(google.api.http) = {
+            get: "/api/users/address/{address.country=/*/}/posts/{type=**}"
+        };
+    }
+
+    rpc GetUsersSummary( GetSummaryRequest ) returns ( GetSummaryResponse ) {
+        option(google.api.http) = {
+            get: "/api/users/summary/{summary=**}"
+        };
+    }
+
+    rpc CreateUser( CreateUserRequest ) returns ( GetUserResponse ) {
+        option(google.api.http) = {
+            post: "/api/users/create"
+            body: "user"
+        };
+    }
+    rpc DeleteUser( DeleteUserRequest ) returns ( DeleteUserResponse ) {
+        option(google.api.http) = {
+            delete: "/api/user/delete/{username=/*/}"
+        };    
+    }
+
+    rpc UpdateUserJob( UpdateUserJobRequest ) returns ( UpdateUserJobResponse ) {
+        option(google.api.http) = {
+            put: "/api/user/username/{username}/{job.job_title=*}/*"
+        };
+    }
+
+  
+}
+
+message GetUserPostRequest {
+    Address address = 1;
+    string type= 2;
+}
+
+message GetUserPostResponse {
+   repeated User users = 1;
+}
+
+enum Post  {
+    PRODUCT = 0;
+    ENGAGEMENT = 1;
+    PROMOTION = 2;
+    COMPETITION = 3;
+    NEWS_TRENDING = 4;
+}
+
+message UpdateUserJobRequest {
+    Job job = 1;
+    string username = 2;
+}
+
+message UpdateUserJobResponse {
+    User user = 1;
+}
+
+message GetSummaryRequest {
+   string summary = 1;
+}
+
+message Summary {
+  repeated string usernames = 1;
+  repeated string job_types = 2;
+  repeated string job_titles = 3;
+  repeated string countries = 4;
+}
+
+message GetSummaryResponse {
+  Summary summary = 1;
+}
+
+message UpdateUserResponse {
+    int64 id = 1;
+}
+
+message DeleteUserRequest {
+    string username = 1;
+}
+message DeleteUserResponse {
+    int64 id = 1;
+}
+
+message CreateUserRequest {
+    User user = 1;
+}
+
+message GetUserRequest {
+    string username = 1;
+    string country = 2;
+    Job job = 3;
+}
+
+message GetUserResponse {
+   User user = 1; 
+}
+
+message GetUsersResponse {
+    repeated User users = 1;
+}
+
+message FilterUserRequest {
+    string username = 1;
+    string country = 2;
+    string company = 3;
+    string jobtype = 4;
+}
+
+message User {
+    int64 id = 1;
+    string username = 2;
+    string surname = 3;
+    string email = 4;
+    Address address = 5;
+    Job job = 6;
+    Post post = 7;
+}
+
+message Address {
+   string city = 1;
+   string country = 2;
+   string country_code = 3;
+}
+
+message Job {
+   string company = 1;
+   string job_area = 2;
+   string job_title = 3;
+   string job_type = 4;
+}

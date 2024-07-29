@@ -1,0 +1,40 @@
+logging:
+  appName: grpc-gateway
+  level: debug
+  format: json
+  output: stdout
+
+transport:
+  http:
+    maxRequestSizeKB: 10024
+    requestTimeout: 5s
+    server:
+      addr: 0.0.0.0:8080
+      gracefulTimeout: 5s
+      readTimeout: 10s
+      readHeaderTimeout: 5s
+    internal:
+      addr: 0.0.0.0:9091
+      metrics:
+        disabled: false
+        path: /metrics
+      profiling:
+        disabled: false
+        path: /debug/pprof
+descriptors:
+  remote:
+    timeout: 1m
+    reflectionServiceName: grpc.reflection.v1.ServerReflection/ServerReflectionInfo
+    exclude:
+      - grpc.health.v1.Health
+      - grpc.reflection.v1.ServerReflection
+      - grpc.reflection.v1alpha.ServerReflection
+gateways:
+  grpc:
+    default: default
+    backends:
+      - name: default
+        url: "localhost:50051"
+        requestTimeout: 5s
+        tls: true
+        tlsSkipverify: true

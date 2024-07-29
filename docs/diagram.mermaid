@@ -1,0 +1,12 @@
+flowchart TD
+    U[REST API client] -->|REST API request|A
+    A[GRPC Rest Proxy]
+    A-->|request protobuf definitions on start|C
+    A-->|translated GRPC request| B[GRPC service]
+    subgraph S[Your service]
+    B
+    C[Protobuf reflection service]
+    D[Generated code from protobufs]
+    B-->D
+    C-->D
+    end
