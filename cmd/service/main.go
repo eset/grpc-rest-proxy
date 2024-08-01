@@ -19,16 +19,17 @@ import (
 )
 
 const (
-	defaultRequestTimeout = 5 * time.Second
-	defaultReadTimeout    = 10 * time.Second
-	descriptorTimeout     = time.Minute
-	maxRequestSize        = 10024
-	httpServerAddr        = "0.0.0.0:8080"
-	reflectionServiceName = "grpc.reflection.v1.ServerReflection/ServerReflectionInfo"
-	excludedDescriptors   = "grpc.health.v1.Health,grpc.reflection.v1.ServerReflection"
-	grpcServerAddr        = "0.0.0.0:50051"
-	tls                   = false
-	tlsSkipverify         = false
+	defaultRequestTimeout          = 5 * time.Second
+	defaultReadTimeout             = 10 * time.Second
+	descriptorTimeout              = time.Minute
+	maxRequestSize                 = 10024
+	httpServerAddr                 = "0.0.0.0:8080"
+	defaultDescriptorsFetchingType = "remote"
+	reflectionServiceName          = "grpc.reflection.v1.ServerReflection/ServerReflectionInfo"
+	excludedDescriptors            = "grpc.health.v1.Health,grpc.reflection.v1.ServerReflection"
+	grpcServerAddr                 = "0.0.0.0:50051"
+	tls                            = false
+	tlsSkipverify                  = false
 )
 
 var (
@@ -47,6 +48,7 @@ func main() {
 	pflag.Duration("transport.http.server.readTimeout", defaultReadTimeout, "read timeout")
 	pflag.Duration("transport.http.server.readHeaderTimeout", defaultRequestTimeout, "read header timeout")
 
+	pflag.String("descriptors.kind", defaultDescriptorsFetchingType, "type of descriptors fetching")
 	pflag.Duration("descriptors.remote.timeout", descriptorTimeout, "request timeout for remote descriptors")
 	pflag.String("descriptors.remote.reflectionServiceName", reflectionServiceName, "reflection service name")
 	pflag.StringArray("descriptors.remote.exclude", strings.Split(excludedDescriptors, ","), "remote descriptors to exclude")
@@ -79,7 +81,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if configFile != nil {
+	if configFile != nil && *configFile != "" {
 		err := loadConfigFromFile(*configFile, conf)
 		if err != nil {
 			logging.Error(jErrors.Details(jErrors.Trace(err)))
