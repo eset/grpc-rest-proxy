@@ -130,10 +130,10 @@ spec:
             - name: grpc-port
               containerPort: 50051
         # gateway that will connnect to service
-        - name: grpc-gateway-service 
-          image: "grpc-gateway:latest" # provider your own image
+        - name: grpc-rest-proxy
+          image: "grpc-rest-proxy:latest" # provider your own image
           command:
-            - "/app/grpc-gateway"
+            - "/app/grpc-rest-proxy"
           args:
             - "--gateways.grpc.client.targetAddr=127.0.0.1:50051"
           ports:
