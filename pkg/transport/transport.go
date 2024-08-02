@@ -125,6 +125,6 @@ func statusJSON(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	_, err := io.WriteString(w, `{"status":"OK"}`)
 	if err != nil {
-		logging.Error("write http response body error for /status: %s", err)
+		logging.Error(fmt.Sprintf("write http response body error for /status: %s", err))
 	}
 }

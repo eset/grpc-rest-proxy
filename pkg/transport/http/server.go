@@ -6,6 +6,7 @@ package http
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"net/http"
 
@@ -39,7 +40,7 @@ func (server *Server) Close() {
 
 	err := server.httpServer.Shutdown(ctx)
 	if err != nil {
-		server.logger.With(err).Error("shutdown http server")
+		server.logger.Error(fmt.Sprintf("shutdown http server error: %s", err))
 		return
 	}
 	server.logger.Info("graceful shutdown successful")

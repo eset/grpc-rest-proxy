@@ -61,7 +61,7 @@ func GetRPCResponse(responseDesc protoreflect.MessageDescriptor) *dynamicpb.Mess
 
 // https://chromium.googlesource.com/external/github.com/grpc/grpc/+/refs/tags/v1.21.4-pre1/doc/statuscodes.md
 //
-//nolint:gocyclo,gomnd
+//nolint:gocyclo,mnd
 func GetHTTPStatusCode(code codes.Code) int {
 	switch code {
 	case codes.OK:
