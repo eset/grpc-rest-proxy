@@ -1,4 +1,4 @@
-name: Vulncheck
+name: Go vulncheck
 
 on: [push]
 
