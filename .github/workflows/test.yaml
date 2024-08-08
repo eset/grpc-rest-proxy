@@ -1,9 +1,9 @@
-name: Go build and test
+name: Test
 
 on: [push]
 
 jobs:
-  ci:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -12,9 +12,6 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: "1.22"
-
-      - name: Build
-        run: make build-only
 
       - name: Test
         run: make test-only race
