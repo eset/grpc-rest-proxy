@@ -22,7 +22,7 @@ lint:
 vulncheck:
 	govulncheck ./...
 
-build-only: build-service
+build-only: build-service build-example-grpc-server
 
 build-service:
 	CGO_ENABLED=0 GOOS=linux go build $(LDFLAGS) -o $(APP_NAME) ./cmd/service/
