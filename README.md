@@ -1,4 +1,10 @@
 # GRPC REST Proxy
+
+[![Build](https://github.com/eset/grpc-rest-proxy/actions/workflows/build.yaml/badge.svg)](https://github.com/eset/grpc-rest-proxy/actions/workflows/build.yaml)
+[![Test](https://github.com/eset/grpc-rest-proxy/actions/workflows/test.yaml/badge.svg)](https://github.com/eset/grpc-rest-proxy/actions/workflows/test.yaml)
+[![Lint](https://github.com/eset/grpc-rest-proxy/actions/workflows/lint.yaml/badge.svg)](https://github.com/eset/grpc-rest-proxy/actions/workflows/lint.yaml)
+[![Vulncheck](https://github.com/eset/grpc-rest-proxy/actions/workflows/vulncheck.yaml/badge.svg)](https://github.com/eset/grpc-rest-proxy/actions/workflows/vulncheck.yaml)
+
 Copyright © ESET 2024-2028
 
 Service that is automatically translating REST requests to gRPC and sending them to provided endpoint. REST is defined using [Google's proto HTTP annotation](https://github.com/googleapis/googleapis/blob/master/google/api/http.proto). Our implementation is able to load proto descriptors directly from grpc endpoint using server reflection service. Main advantage of this approach is elimination of the need to recompile protobufs or grpc-rest-proxy (to incorporate changes in protos), making translation and maintenance easier.
