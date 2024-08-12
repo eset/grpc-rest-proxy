@@ -99,7 +99,7 @@ func createRoutingEndpoint(rc *Context, logger Logger) func(w http.ResponseWrite
 
 		var header, trailer metadata.MD
 		err = rc.GrcpClient.Invoke(
-			transformer.GetRPCRequestContext(r),
+			transformer.GetRPCRequestContext(r.ProtoMajor, r),
 			routeMatch.GrpcSpec.FullPath(),
 			rpcRequest,
 			rpcResponse,
@@ -108,16 +108,16 @@ func createRoutingEndpoint(rc *Context, logger Logger) func(w http.ResponseWrite
 		)
 		if err != nil {
 			if e, ok := status.FromError(err); ok {
-				transformer.SetRESTHeaders(w.Header(), header, trailer)
+				transformer.SetRESTHeaders(r.ProtoMajor, w.Header(), header, trailer)
 				w.WriteHeader(transformer.GetHTTPStatusCode(e.Code()))
 			}
 			logger.ErrorContext(r.Context(), jErrors.Details(jErrors.Trace(err)))
 			return
 		}
 
-		transformer.SetRESTHeaders(w.Header(), header, trailer)
-		fmt.Fprint(w, protojson.Format(rpcResponse))
+		transformer.SetRESTHeaders(r.ProtoMajor, w.Header(), header, trailer)
 		w.WriteHeader(http.StatusOK)
+		fmt.Fprint(w, protojson.Format(rpcResponse))
 	}
 }
 
