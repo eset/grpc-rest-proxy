@@ -9,6 +9,7 @@ import (
 
 	"github.com/eset/grpc-rest-proxy/pkg/gateway/grpc"
 	"github.com/eset/grpc-rest-proxy/pkg/repository/descriptors"
+	"github.com/eset/grpc-rest-proxy/pkg/service/jsonencoder"
 	"github.com/eset/grpc-rest-proxy/pkg/transport"
 
 	"github.com/go-playground/validator/v10"
@@ -20,10 +21,15 @@ type Config struct {
 	Transport   *transport.Config   `mapstructure:"transport" validate:"required"`
 	Descriptors *descriptors.Config `mapstructure:"descriptors" validate:"required"`
 	Gateways    *Gateway            `mapstructure:"gateways" validate:"required"`
+	Service     *Service            `mapstructure:"service" validate:"required"`
 }
 
 type Gateway struct {
 	GrpcClientConfig *grpc.ClientConfig `mapstructure:"grpc"`
+}
+
+type Service struct {
+	JSONEncoder *jsonencoder.Config `mapstructure:"jsonencoder"`
 }
 
 func (c *Config) validate() error {

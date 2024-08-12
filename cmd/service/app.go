@@ -15,6 +15,7 @@ import (
 
 	grpcClient "github.com/eset/grpc-rest-proxy/pkg/gateway/grpc"
 	"github.com/eset/grpc-rest-proxy/pkg/repository/descriptors"
+	"github.com/eset/grpc-rest-proxy/pkg/service/jsonencoder"
 	"github.com/eset/grpc-rest-proxy/pkg/service/protoparser"
 	"github.com/eset/grpc-rest-proxy/pkg/transport"
 	"github.com/eset/grpc-rest-proxy/pkg/transport/http"
@@ -74,6 +75,7 @@ func (app *App) createHTTPServer() {
 	routerContext := &transport.Context{
 		Router:     app.router,
 		GrcpClient: app.gateways.grpcClient,
+		Encoder:    jsonencoder.NewOptions(app.conf.Service.JSONEncoder),
 	}
 	handler := transport.NewHandler(routerContext, logging.Default())
 	app.serverHTTP = http.NewServer(app.conf.Transport.HTTP.Server, handler)
