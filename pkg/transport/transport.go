@@ -108,16 +108,28 @@ func createRoutingEndpoint(rc *Context, logger Logger) func(w http.ResponseWrite
 		)
 		if err != nil {
 			if e, ok := status.FromError(err); ok {
-				transformer.SetRESTHeaders(w.Header(), header, trailer)
+				transformer.SetRESTHeaders(r.ProtoMajor, w.Header(), header, trailer)
 				w.WriteHeader(transformer.GetHTTPStatusCode(e.Code()))
 			}
 			logger.ErrorContext(r.Context(), jErrors.Details(jErrors.Trace(err)))
 			return
 		}
 
-		transformer.SetRESTHeaders(w.Header(), header, trailer)
-		fmt.Fprint(w, protojson.Format(rpcResponse))
-		w.WriteHeader(http.StatusOK)
+		transformer.SetRESTHeaders(r.ProtoMajor, w.Header(), header, trailer)
+
+		response, err := protojson.Marshal(rpcResponse)
+		if err != nil {
+			logger.ErrorContext(r.Context(), jErrors.Details(jErrors.Trace(err)))
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		_, err = w.Write(response)
+		if err != nil {
+			logger.ErrorContext(r.Context(), jErrors.Details(jErrors.Trace(err)))
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	}
 }
 

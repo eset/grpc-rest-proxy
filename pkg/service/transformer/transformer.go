@@ -17,7 +17,26 @@ import (
 
 const (
 	InvalidGrpcMethodName = jErrors.ConstError("gRPC method name is invalid")
+
+	headerAccept        = "accept"
+	headerContentType   = "content-type"
+	headerContentLength = "content-length"
+
+	// connection specific headers http1.0/1.1
+	headerConnection       = "connection"
+	headerProxyConnection  = "proxy-connection"
+	headerKeepAlive        = "keep-alive"
+	headerTransferEncoding = "transfer-encoding"
+	headerUpgrade          = "upgrade"
 )
+
+func isConnectionSpecificHeader(name string) bool {
+	switch name {
+	case headerConnection, headerProxyConnection, headerKeepAlive, headerTransferEncoding, headerUpgrade:
+		return true
+	}
+	return false
+}
 
 func GetRPCRequestContext(request *http.Request) context.Context {
 	grpcMetadata := metadata.Pairs()
@@ -26,33 +45,43 @@ func GetRPCRequestContext(request *http.Request) context.Context {
 		name = strings.ToLower(name)
 
 		// in case the client sends a content-length header it will be removed before proceeding
-		if name == "content-length" {
+		if name == headerContentLength {
+			continue
+		}
+		// RFC 9113 8.2.2.: endpoint MUST NOT generate an HTTP/2 message containing connection-specific header fields
+		if request.ProtoMajor > 1 && isConnectionSpecificHeader(name) {
 			continue
 		}
 		grpcMetadata.Append(name, values...)
 	}
 
-	grpcMetadata.Set("accept", "application/protobuf")
-	grpcMetadata.Set("content-type", "application/protobuf")
+	grpcMetadata.Set(headerAccept, "application/protobuf")
+	grpcMetadata.Set(headerContentType, "application/protobuf")
 
 	return metadata.NewOutgoingContext(request.Context(), grpcMetadata)
 }
 
-func SetRESTHeaders(headers http.Header, gRPCheader metadata.MD, gRPCTrailer metadata.MD) {
+func setHeader(headers http.Header, protoMajor int, name string, values []string) {
+	// RFC 9113 8.2.2.: endpoint MUST NOT generate an HTTP/2 message containing connection-specific header fields
+	if protoMajor > 1 && isConnectionSpecificHeader(name) {
+		return
+	}
+	for _, value := range values {
+		headers.Add(name, value)
+	}
+}
+
+func SetRESTHeaders(protoMajor int, headers http.Header, gRPCheader metadata.MD, gRPCTrailer metadata.MD) {
 	// set headers
 	for name, values := range gRPCheader {
-		for _, value := range values {
-			headers.Add(name, value)
-		}
+		setHeader(headers, protoMajor, name, values)
 	}
 	// append trailers as headers
 	for name, values := range gRPCTrailer {
-		for _, value := range values {
-			headers.Add(name, value)
-		}
+		setHeader(headers, protoMajor, name, values)
 	}
 
-	headers.Set("content-type", "application/json")
+	headers.Set(headerContentType, "application/json")
 }
 
 func GetRPCResponse(responseDesc protoreflect.MessageDescriptor) *dynamicpb.Message {
