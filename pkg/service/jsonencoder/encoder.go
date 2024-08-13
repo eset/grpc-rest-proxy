@@ -1,3 +1,6 @@
+// Copyright (c) 2024 ESET
+// See LICENSE file for redistribution.
+
 package jsonencoder
 
 import (
