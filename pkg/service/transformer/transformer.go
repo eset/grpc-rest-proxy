@@ -38,7 +38,7 @@ func isConnectionSpecificHeader(name string) bool {
 	return false
 }
 
-func GetRPCRequestContext(protoMajor int, request *http.Request) context.Context {
+func GetRPCRequestContext(request *http.Request) context.Context {
 	grpcMetadata := metadata.Pairs()
 
 	for name, values := range request.Header {
@@ -49,7 +49,7 @@ func GetRPCRequestContext(protoMajor int, request *http.Request) context.Context
 			continue
 		}
 		// RFC 9113 8.2.2.: endpoint MUST NOT generate an HTTP/2 message containing connection-specific header fields
-		if protoMajor > 1 && isConnectionSpecificHeader(name) {
+		if request.ProtoMajor > 1 && isConnectionSpecificHeader(name) {
 			continue
 		}
 		grpcMetadata.Append(name, values...)
@@ -62,11 +62,11 @@ func GetRPCRequestContext(protoMajor int, request *http.Request) context.Context
 }
 
 func setHeader(headers http.Header, protoMajor int, name string, values []string) {
+	// RFC 9113 8.2.2.: endpoint MUST NOT generate an HTTP/2 message containing connection-specific header fields
+	if protoMajor > 1 && isConnectionSpecificHeader(name) {
+		return
+	}
 	for _, value := range values {
-		// RFC 9113 8.2.2.: endpoint MUST NOT generate an HTTP/2 message containing connection-specific header fields
-		if protoMajor > 1 && isConnectionSpecificHeader(name) {
-			continue
-		}
 		headers.Add(name, value)
 	}
 }
