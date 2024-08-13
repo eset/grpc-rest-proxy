@@ -27,9 +27,9 @@ import (
 )
 
 type Context struct {
-	Router     *routerPkg.ReloadableRouter
-	GrcpClient grpcClient.ClientInterface
-	Encoder    jsonencoder.Encoder
+	Router      *routerPkg.ReloadableRouter
+	GrcpClient  grpcClient.ClientInterface
+	JSONEncoder jsonencoder.Encoder
 }
 
 type Logger interface {
@@ -109,22 +109,28 @@ func createRoutingEndpoint(rc *Context, logger Logger) func(w http.ResponseWrite
 		)
 		if err != nil {
 			if e, ok := status.FromError(err); ok {
-				transformer.SetRESTHeaders(w.Header(), header, trailer)
+				transformer.SetRESTHeaders(r.ProtoMajor, w.Header(), header, trailer)
 				w.WriteHeader(transformer.GetHTTPStatusCode(e.Code()))
 			}
 			logger.ErrorContext(r.Context(), jErrors.Details(jErrors.Trace(err)))
 			return
 		}
 
-		transformer.SetRESTHeaders(w.Header(), header, trailer)
-		response, err := rc.Encoder.Format(rpcResponse)
+		transformer.SetRESTHeaders(r.ProtoMajor, w.Header(), header, trailer)
+
+		response, err := rc.JSONEncoder.Encode(rpcResponse)
 		if err != nil {
 			logger.ErrorContext(r.Context(), jErrors.Details(jErrors.Trace(err)))
 			w.WriteHeader(http.StatusInternalServerError)
+			return
 		}
 
-		fmt.Fprint(w, response)
-		w.WriteHeader(http.StatusOK)
+		_, err = w.Write(response)
+		if err != nil {
+			logger.ErrorContext(r.Context(), jErrors.Details(jErrors.Trace(err)))
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	}
 }
 

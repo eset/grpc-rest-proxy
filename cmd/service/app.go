@@ -73,9 +73,9 @@ func createGateways(conf *Config) (*gateways, error) {
 
 func (app *App) createHTTPServer() {
 	routerContext := &transport.Context{
-		Router:     app.router,
-		GrcpClient: app.gateways.grpcClient,
-		Encoder:    jsonencoder.NewOptions(app.conf.Service.JSONEncoder),
+		Router:      app.router,
+		GrcpClient:  app.gateways.grpcClient,
+		JSONEncoder: jsonencoder.New(app.conf.Service.JSONEncoder),
 	}
 	handler := transport.NewHandler(routerContext, logging.Default())
 	app.serverHTTP = http.NewServer(app.conf.Transport.HTTP.Server, handler)

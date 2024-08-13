@@ -40,8 +40,8 @@ Usage of ./grpc-rest-proxy:
       --transport.http.server.gracefulTimeout duration     graceful timeout (default 5s)
       --transport.http.server.readHeaderTimeout duration   read header timeout (default 5s)
       --transport.http.server.readTimeout duration         read timeout (default 10s)
-      --service.jsonencoder.emitUnpopulated                emit unpopulated fields
-      --service.jsonencoder.emitDefaultValues              emit default values
+      --service.jsonencoder.emitUnpopulated                emit unpopulated fields in JSON response for empty gRPC values
+      --service.jsonencoder.emitDefaultValues              include default values in JSON response for empty gRPC values
   -v, --version                                            print version
 ```
 

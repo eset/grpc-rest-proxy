@@ -19,17 +19,17 @@ type Encoder struct {
 	opts protojson.MarshalOptions
 }
 
-func NewOptions(cfg *Config) Encoder {
+func New(cfg *Config) Encoder {
 	return Encoder{
 		opts: protojson.MarshalOptions{EmitUnpopulated: cfg.EmitUnpopulated, EmitDefaultValues: cfg.EmitDefaultValues},
 	}
 }
 
-func (e Encoder) Format(m proto.Message) (string, error) {
+func (e Encoder) Encode(m proto.Message) ([]byte, error) {
 	response, err := e.opts.Marshal(m)
 	if err != nil {
-		return "", jErrors.Trace(err)
+		return nil, jErrors.Trace(err)
 	}
 
-	return string(response), nil
+	return response, nil
 }
