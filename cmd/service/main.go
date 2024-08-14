@@ -30,6 +30,8 @@ const (
 	grpcServerAddr                 = "0.0.0.0:50051"
 	tls                            = false
 	tlsSkipverify                  = false
+	defaultEmitUnpopulated         = false
+	defaultEmitDefaultValues       = false
 )
 
 var (
@@ -58,6 +60,10 @@ func main() {
 	pflag.Duration("gateways.grpc.client.requestTimeout", defaultRequestTimeout, "requests timeout")
 	pflag.Bool("gateways.grpc.client.tls", tls, "use TLS for gRPC connection")
 	pflag.Bool("gateways.grpc.client.tlsSkipverify", tlsSkipverify, "skip TLS verification")
+
+	pflag.Bool("service.jsonencoder.emitUnpopulated", defaultEmitUnpopulated, "emit unpopulated fields in JSON response for empty gRPC values")
+	pflag.Bool("service.jsonencoder.emitDefaultValues", defaultEmitDefaultValues, "include default values in JSON response for empty gRPC values") //nolint:lll
+
 	pflag.BoolP("version", "v", false, "print version")
 	configFile := pflag.StringP("config", "c", "", "path to config file")
 

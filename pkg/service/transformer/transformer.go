@@ -61,16 +61,6 @@ func GetRPCRequestContext(request *http.Request) context.Context {
 	return metadata.NewOutgoingContext(request.Context(), grpcMetadata)
 }
 
-func setHeader(headers http.Header, protoMajor int, name string, values []string) {
-	// RFC 9113 8.2.2.: endpoint MUST NOT generate an HTTP/2 message containing connection-specific header fields
-	if protoMajor > 1 && isConnectionSpecificHeader(name) {
-		return
-	}
-	for _, value := range values {
-		headers.Add(name, value)
-	}
-}
-
 func SetRESTHeaders(protoMajor int, headers http.Header, gRPCheader metadata.MD, gRPCTrailer metadata.MD) {
 	// set headers
 	for name, values := range gRPCheader {
@@ -129,5 +119,15 @@ func GetHTTPStatusCode(code codes.Code) int {
 		return http.StatusInternalServerError
 	default:
 		return http.StatusInternalServerError
+	}
+}
+
+func setHeader(headers http.Header, protoMajor int, name string, values []string) {
+	// RFC 9113 8.2.2.: endpoint MUST NOT generate an HTTP/2 message containing connection-specific header fields
+	if protoMajor > 1 && isConnectionSpecificHeader(name) {
+		return
+	}
+	for _, value := range values {
+		headers.Add(name, value)
 	}
 }

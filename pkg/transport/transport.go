@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	grpcClient "github.com/eset/grpc-rest-proxy/pkg/gateway/grpc"
+	"github.com/eset/grpc-rest-proxy/pkg/service/jsonencoder"
 	"github.com/eset/grpc-rest-proxy/pkg/service/transformer"
 	routerPkg "github.com/eset/grpc-rest-proxy/pkg/transport/router"
 
@@ -22,13 +23,13 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/dynamicpb"
 )
 
 type Context struct {
-	Router     *routerPkg.ReloadableRouter
-	GrcpClient grpcClient.ClientInterface
+	Router      *routerPkg.ReloadableRouter
+	GrcpClient  grpcClient.ClientInterface
+	JSONEncoder jsonencoder.Encoder
 }
 
 type Logger interface {
@@ -57,10 +58,10 @@ func getQueryVariables(queryValues url.Values) []transformer.Variable {
 	return queryVariables
 }
 
-func convertRequestToGRPC(route *routerPkg.Match, r *http.Request) (req *dynamicpb.Message, resp *dynamicpb.Message, err error) {
+func convertRequestToGRPC(route *routerPkg.Match, r *http.Request) (req *dynamicpb.Message, err error) {
 	reqBody, err := io.ReadAll(r.Body)
 	if err != nil {
-		return nil, nil, jErrors.Trace(err)
+		return nil, jErrors.Trace(err)
 	}
 	r.Body.Close()
 
@@ -69,11 +70,10 @@ func convertRequestToGRPC(route *routerPkg.Match, r *http.Request) (req *dynamic
 
 	req, err = transformer.GetRPCRequest(reqBody, route.GrpcSpec.RequestDesc, route.Params, route.BodyRule)
 	if err != nil {
-		return nil, nil, jErrors.Trace(err)
+		return nil, jErrors.Trace(err)
 	}
-	resp = transformer.GetRPCResponse(route.GrpcSpec.ResponseDesc)
 
-	return req, resp, nil
+	return req, nil
 }
 
 func createRoutingEndpoint(rc *Context, logger Logger) func(w http.ResponseWriter, r *http.Request) {
@@ -90,12 +90,13 @@ func createRoutingEndpoint(rc *Context, logger Logger) func(w http.ResponseWrite
 			return
 		}
 
-		rpcRequest, rpcResponse, err := convertRequestToGRPC(routeMatch, r)
+		rpcRequest, err := convertRequestToGRPC(routeMatch, r)
 		if err != nil {
 			logger.ErrorContext(r.Context(), jErrors.Details(jErrors.Trace(err)))
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
+		rpcResponse := transformer.GetRPCResponse(routeMatch.GrpcSpec.ResponseDesc)
 
 		var header, trailer metadata.MD
 		err = rc.GrcpClient.Invoke(
@@ -117,7 +118,7 @@ func createRoutingEndpoint(rc *Context, logger Logger) func(w http.ResponseWrite
 
 		transformer.SetRESTHeaders(r.ProtoMajor, w.Header(), header, trailer)
 
-		response, err := protojson.Marshal(rpcResponse)
+		response, err := rc.JSONEncoder.Encode(rpcResponse)
 		if err != nil {
 			logger.ErrorContext(r.Context(), jErrors.Details(jErrors.Trace(err)))
 			w.WriteHeader(http.StatusInternalServerError)
