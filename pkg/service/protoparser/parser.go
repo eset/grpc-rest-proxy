@@ -7,7 +7,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/eset/grpc-rest-proxy/pkg/transport/router"
+	"github.com/eset/grpc-rest-proxy/pkg/service/router"
 
 	jErrors "github.com/juju/errors"
 	"google.golang.org/genproto/googleapis/api/annotations"
@@ -16,6 +16,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/descriptorpb"
+	"google.golang.org/protobuf/types/dynamicpb"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -23,6 +24,7 @@ import (
 func ParseFileDescSets(fdSets []*descriptorpb.FileDescriptorSet) ParseResult {
 	result := ParseResult{
 		FileRegistry: &protoregistry.Files{},
+		TypeResolver: &protoregistry.Types{},
 	}
 
 	// Register default types.
@@ -67,6 +69,12 @@ func registerFile(fd protoreflect.FileDescriptor, result *ParseResult) {
 }
 
 func ParseFileDesc(fd protoreflect.FileDescriptor, result *ParseResult) {
+	err := registerTypes(fd, result)
+	if err != nil {
+		result.AddError(jErrors.Trace(err))
+		return
+	}
+
 	services := fd.Services()
 	for i := 0; i < services.Len(); i++ {
 		parseServiceDesc(services.Get(i), result)
@@ -182,4 +190,50 @@ func getPattern(rule *annotations.HttpRule) (router.MethodType, string, error) {
 	}
 
 	return router.UnknownMethod, "", jErrors.Errorf("unknown method")
+}
+
+func registerTypes(fd protoreflect.FileDescriptor, result *ParseResult) error {
+	msgs := fd.Messages()
+	for idx := 0; idx < msgs.Len(); idx++ {
+		msg := msgs.Get(idx)
+		_, err := result.TypeResolver.FindMessageByName(msg.FullName())
+		if err == nil {
+			continue
+		}
+
+		err = result.TypeResolver.RegisterMessage(dynamicpb.NewMessageType(msg))
+		if err != nil {
+			return jErrors.Trace(err)
+		}
+	}
+
+	enums := fd.Enums()
+	for idx := 0; idx < enums.Len(); idx++ {
+		enum := enums.Get(idx)
+		_, err := result.TypeResolver.FindEnumByName(enum.FullName())
+		if err == nil {
+			continue
+		}
+
+		err = result.TypeResolver.RegisterEnum(dynamicpb.NewEnumType(enum))
+		if err != nil {
+			return jErrors.Trace(err)
+		}
+	}
+
+	exts := fd.Extensions()
+	for idx := 0; idx < exts.Len(); idx++ {
+		ext := exts.Get(idx)
+		_, err := result.TypeResolver.FindExtensionByName(ext.FullName())
+		if err == nil {
+			continue
+		}
+
+		err = result.TypeResolver.RegisterExtension(dynamicpb.NewExtensionType(ext))
+		if err != nil {
+			return jErrors.Trace(err)
+		}
+	}
+
+	return nil
 }

@@ -148,3 +148,22 @@ spec:
             - name: web-port
               containerPort: 8080
 ```
+
+### Error handling
+On error proxy returns HTTP status code and JSON response body. JSON is defined using Google's RPC status message. It contains code, message and details. 
+
+Backend endpoint can define its own protobufs containing details of error and return it in standard grpc status. Proxy then takes this status and serializes it to JSON response.
+
+```json
+{
+  "code": 404,
+  "message": "User name not found.",
+  "details": [
+    {
+      "@type": "type.googleapis.com/user.v1.GetUserError",
+      "username": "John1234",
+      "recommendation": "Please check the username and try again."
+    }
+  ]
+}
+```

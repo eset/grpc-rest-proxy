@@ -170,3 +170,8 @@ message Job {
    string job_title = 3;
    string job_type = 4;
 }
+
+message GetUserError {
+   string username = 1;
+   string recommendation = 2;
+}

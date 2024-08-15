@@ -9,6 +9,8 @@ import (
 	"sync"
 
 	pb "github.com/eset/grpc-rest-proxy/cmd/examples/grpcserver/gen/user/v1"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type userService struct {
@@ -37,7 +39,18 @@ func (s *userService) GetUser(ctx context.Context, request *pb.GetUserRequest) (
 			}, nil
 		}
 	}
-	return &pb.GetUserResponse{}, nil
+
+	errDetail := &pb.GetUserError{
+		Username:       request.Username,
+		Recommendation: "Please check the username and try again.",
+	}
+
+	errStatus, err := status.New(codes.NotFound, "User name not found.").WithDetails(errDetail)
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, errStatus.Err()
 }
 
 func (s *userService) GetUsers(ctx context.Context, request *pb.GetUserRequest) (*pb.GetUsersResponse, error) {

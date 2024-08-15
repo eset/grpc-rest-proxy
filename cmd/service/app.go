@@ -17,17 +17,17 @@ import (
 	"github.com/eset/grpc-rest-proxy/pkg/repository/descriptors"
 	"github.com/eset/grpc-rest-proxy/pkg/service/jsonencoder"
 	"github.com/eset/grpc-rest-proxy/pkg/service/protoparser"
+	routerPkg "github.com/eset/grpc-rest-proxy/pkg/service/router"
 	"github.com/eset/grpc-rest-proxy/pkg/transport"
 	"github.com/eset/grpc-rest-proxy/pkg/transport/http"
-	routerPkg "github.com/eset/grpc-rest-proxy/pkg/transport/router"
 )
 
 type App struct {
 	conf            *Config
 	serverHTTP      *http.Server
-	router          *routerPkg.ReloadableRouter
 	descriptorsRepo descriptors.Descriptors
 	gateways        *gateways
+	reloader        *transport.EndpointReloader
 }
 
 type gateways struct {
@@ -49,14 +49,13 @@ func New(ctx context.Context, conf *Config) (*App, error) {
 		return nil, jErrors.Trace(err)
 	}
 
-	router, err := app.createRouter(ctx)
+	endpointProxy, err := app.createProxyEndpoint(ctx)
 	if err != nil {
 		return nil, jErrors.Annotate(jErrors.Trace(err), "failed to create router")
 	}
-	app.router = routerPkg.WithWrapper(router)
 
+	app.reloader = transport.NewEndpointReloader(endpointProxy)
 	app.createHTTPServer()
-
 	return app, nil
 }
 
@@ -72,33 +71,21 @@ func createGateways(conf *Config) (*gateways, error) {
 }
 
 func (app *App) createHTTPServer() {
-	routerContext := &transport.Context{
-		Router:      app.router,
-		GrcpClient:  app.gateways.grpcClient,
-		JSONEncoder: jsonencoder.New(app.conf.Service.JSONEncoder),
-	}
-	handler := transport.NewHandler(routerContext, logging.Default())
+	handler := transport.NewHandler(app.reloader)
 	app.serverHTTP = http.NewServer(app.conf.Transport.HTTP.Server, handler)
 }
 
-func (app *App) createRouter(ctx context.Context) (*routerPkg.Router, error) {
-	router, err := app.getRouterWithRoutes(ctx)
-	if err != nil {
-		return nil, jErrors.Trace(err)
-	}
-	return router, nil
-}
-
-func (app *App) reloadRouter(ctx context.Context, r *routerPkg.ReloadableRouter) error {
-	routerRoutes, err := app.getRouterWithRoutes(ctx)
+func (app *App) reloadEndpoint(ctx context.Context) error {
+	endpoint, err := app.createProxyEndpoint(ctx)
 	if err != nil {
 		return jErrors.Trace(err)
 	}
-	r.SetRouter(routerRoutes)
+
+	app.reloader.Set(endpoint)
 	return nil
 }
 
-func (app *App) getRouterWithRoutes(ctx context.Context) (*routerPkg.Router, error) {
+func (app *App) createProxyEndpoint(ctx context.Context) (*transport.ProxyEndpoint, error) {
 	fileDescriptorSet, err := app.descriptorsRepo.GetProtoFileDescriptorSet(ctx)
 	if err != nil {
 		return nil, jErrors.Annotate(jErrors.Trace(err), "failed to retrieve proto descriptors from source")
@@ -109,16 +96,24 @@ func (app *App) getRouterWithRoutes(ctx context.Context) (*routerPkg.Router, err
 		return nil, jErrors.Trace(jErrors.New(parseResult.ErrorsString()))
 	}
 
-	routerRoutes := routerPkg.NewRouter()
+	router := routerPkg.NewRouter()
 
 	for _, route := range parseResult.Routes {
-		err = routerRoutes.Push(route)
+		err = router.Push(route)
 		if err != nil {
 			return nil, jErrors.Trace(err)
 		}
 		logging.Info(fmt.Sprintf("Added route: [%s] %s", routerPkg.MethodToString(route.Method()), route.Path()))
 	}
-	return routerRoutes, nil
+
+	encoder := jsonencoder.New(app.conf.Service.JSONEncoder, parseResult.TypeResolver)
+
+	return transport.NewProxyEndpoint(
+		logging.Default(),
+		router,
+		app.gateways.grpcClient,
+		encoder,
+	), nil
 }
 
 func (app *App) listenForSignal(ctx context.Context, sigUsr1 <-chan os.Signal) {
@@ -129,7 +124,7 @@ func (app *App) listenForSignal(ctx context.Context, sigUsr1 <-chan os.Signal) {
 		case <-sigUsr1:
 			logging.Info("reload signal received")
 
-			err := app.reloadRouter(ctx, app.router)
+			err := app.reloadEndpoint(ctx)
 			if err != nil {
 				logging.Error(jErrors.Details(jErrors.Trace(err)))
 			}

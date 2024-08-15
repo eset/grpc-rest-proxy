@@ -6,6 +6,7 @@ package jsonencoder
 import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
 	jErrors "github.com/juju/errors"
 )
@@ -19,9 +20,15 @@ type Encoder struct {
 	opts protojson.MarshalOptions
 }
 
-func New(cfg *Config) Encoder {
+// New creates a new JSON encoder.
+// Type resolver is used to resolve types of messages and can be nil in which case the default resolver is used.
+func New(cfg *Config, typeResolver *protoregistry.Types) Encoder {
 	return Encoder{
-		opts: protojson.MarshalOptions{EmitUnpopulated: cfg.EmitUnpopulated, EmitDefaultValues: cfg.EmitDefaultValues},
+		opts: protojson.MarshalOptions{
+			EmitUnpopulated:   cfg.EmitUnpopulated,
+			EmitDefaultValues: cfg.EmitDefaultValues,
+			Resolver:          typeResolver,
+		},
 	}
 }
 

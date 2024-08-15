@@ -4,10 +4,11 @@
 package router
 
 import (
+	routePattern "github.com/eset/grpc-rest-proxy/pkg/service/router/pattern"
 	"github.com/eset/grpc-rest-proxy/pkg/service/transformer"
-	routePattern "github.com/eset/grpc-rest-proxy/pkg/transport/router/pattern"
 
 	jErrors "github.com/juju/errors"
+	"google.golang.org/protobuf/reflect/protoregistry"
 )
 
 type Match struct {
@@ -19,12 +20,25 @@ type Match struct {
 
 type Router struct {
 	routesByMethod map[MethodType][]routeMatcher
+	// resolver is used to resolve any types that are unknown to proxy.
+	typeResolver *protoregistry.Types
 }
 
 func NewRouter() *Router {
 	return &Router{
 		routesByMethod: make(map[MethodType][]routeMatcher),
 	}
+}
+
+func NewRouterWithRoutes(route []*Route) (*Router, error) {
+	r := NewRouter()
+	for _, rt := range route {
+		err := r.Push(rt)
+		if err != nil {
+			return nil, jErrors.Trace(err)
+		}
+	}
+	return r, nil
 }
 
 type routeMatcher struct {
@@ -98,4 +112,8 @@ func (r *Router) Push(route *Route) error {
 
 	r.routesByMethod[route.method] = routes
 	return nil
+}
+
+func (r *Router) Resolver() *protoregistry.Types {
+	return r.typeResolver
 }
