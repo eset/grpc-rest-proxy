@@ -9,30 +9,30 @@ import (
 
 // EndpointReloader is wrapper for Handle method to allow dynamic endpoint reloading
 type EndpointReloader struct {
-	mtx   sync.RWMutex
-	proxy *ProxyEndpoint
+	mtx     sync.RWMutex
+	handler http.Handler
 }
 
-func NewEndpointReloader(proxy *ProxyEndpoint) *EndpointReloader {
+func NewEndpointReloader(handler http.Handler) *EndpointReloader {
 	return &EndpointReloader{
-		proxy: proxy,
+		handler: handler,
 	}
 }
 
-func (e *EndpointReloader) Handle(w http.ResponseWriter, r *http.Request) {
+func (e *EndpointReloader) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	e.mtx.RLock()
 	defer e.mtx.RUnlock()
-	e.proxy.Handle(w, r)
+	e.handler.ServeHTTP(w, r)
 }
 
 func (e *EndpointReloader) Set(endpoint *ProxyEndpoint) {
 	e.mtx.Lock()
-	e.proxy = endpoint
+	e.handler = endpoint
 	e.mtx.Unlock()
 }
 
-func (e *EndpointReloader) Endpoint() *ProxyEndpoint {
+func (e *EndpointReloader) Endpoint() http.Handler {
 	e.mtx.RLock()
 	defer e.mtx.RUnlock()
-	return e.proxy
+	return e.handler
 }

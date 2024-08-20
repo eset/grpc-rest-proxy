@@ -50,4 +50,7 @@ docker:
 	go mod vendor
 	docker build . -t grpc-rest-proxy-test
 
+generate:
+	buf generate
+
 .PHONY: all default build test fmt lint build-only test-only race cover coverprofile clean

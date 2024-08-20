@@ -13,14 +13,14 @@ import (
 	"github.com/eset/grpc-rest-proxy/pkg/service/jsonencoder"
 	routerPkg "github.com/eset/grpc-rest-proxy/pkg/service/router"
 	"github.com/eset/grpc-rest-proxy/pkg/service/transformer"
+	statusPkg "github.com/eset/grpc-rest-proxy/pkg/transport/status"
 
 	jErrors "github.com/juju/errors"
-	rpcStatus "google.golang.org/genproto/googleapis/rpc/status"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	grpcStatus "google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/dynamicpb"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 type ProxyEndpoint struct {
@@ -44,23 +44,23 @@ func NewProxyEndpoint(
 	}
 }
 
-func (e *ProxyEndpoint) Handle(w http.ResponseWriter, r *http.Request) {
+func (e *ProxyEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	method, err := routerPkg.StringToMethod(r.Method)
 	if err != nil {
-		e.respondWithError(r.Context(), w, errStatusFromCode(http.StatusMethodNotAllowed))
+		e.respondWithError(r.Context(), w, statusPkg.FromHTTPCode(http.StatusMethodNotAllowed))
 		return
 	}
 
 	routeMatch := e.router.Find(method, r.URL.Path)
 	if routeMatch == nil {
-		e.respondWithError(r.Context(), w, errStatusFromCode(http.StatusNotFound))
+		e.respondWithError(r.Context(), w, statusPkg.FromHTTPCode(http.StatusNotFound))
 		return
 	}
 
 	rpcRequest, err := convertRequestToGRPC(routeMatch, r)
 	if err != nil {
 		e.logger.ErrorContext(r.Context(), jErrors.Details(jErrors.Trace(err)))
-		e.respondWithError(r.Context(), w, errStatusFromCode(http.StatusBadRequest))
+		e.respondWithError(r.Context(), w, statusPkg.FromHTTPCode(http.StatusBadRequest))
 		return
 	}
 	rpcResponse := transformer.GetRPCResponse(routeMatch.GrpcSpec.ResponseDesc)
@@ -75,13 +75,13 @@ func (e *ProxyEndpoint) Handle(w http.ResponseWriter, r *http.Request) {
 		grpc.Trailer(&trailer),
 	)
 	if err != nil {
-		if status, ok := grpcStatus.FromError(err); ok {
+		if errStatus, ok := grpcStatus.FromError(err); ok {
 			transformer.SetRESTHeaders(r.ProtoMajor, w.Header(), header, trailer)
-			e.respondWithError(r.Context(), w, errStatusFromGRPC(status))
+			e.respondWithError(r.Context(), w, statusPkg.FromGRPC(errStatus))
 			return
 		}
 		e.logger.ErrorContext(r.Context(), jErrors.Details(jErrors.Trace(err)))
-		e.respondWithError(r.Context(), w, errStatusFromCode(http.StatusInternalServerError))
+		e.respondWithError(r.Context(), w, statusPkg.FromHTTPCode(http.StatusInternalServerError))
 		return
 	}
 
@@ -102,7 +102,7 @@ func (e *ProxyEndpoint) Handle(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (e *ProxyEndpoint) respondWithError(ctx context.Context, w http.ResponseWriter, status *rpcStatus.Status) {
+func (e *ProxyEndpoint) respondWithError(ctx context.Context, w http.ResponseWriter, status *statusPkg.Error) {
 	encodedStatus, err := e.jsonEncoder.Encode(status)
 	if err != nil {
 		e.logger.ErrorContext(ctx, jErrors.Details(jErrors.Trace(err)))
@@ -115,33 +115,6 @@ func (e *ProxyEndpoint) respondWithError(ctx context.Context, w http.ResponseWri
 	_, err = w.Write(encodedStatus)
 	if err != nil {
 		e.logger.ErrorContext(ctx, jErrors.Details(jErrors.Trace(err)))
-	}
-}
-
-func errStatusFromCode(code int) *rpcStatus.Status {
-	return &rpcStatus.Status{
-		Code:    int32(code),
-		Message: http.StatusText(code),
-	}
-}
-
-func errStatusFromGRPC(status *grpcStatus.Status) *rpcStatus.Status {
-	httpStatus := transformer.GetHTTPStatusCode(status.Code())
-
-	msg := status.Message()
-	if msg == "" {
-		msg = http.StatusText(httpStatus)
-	}
-
-	var details []*anypb.Any
-	if status.Proto() != nil {
-		details = status.Proto().GetDetails()
-	}
-
-	return &rpcStatus.Status{
-		Code:    int32(httpStatus),
-		Message: msg,
-		Details: details,
 	}
 }
 

@@ -150,9 +150,9 @@ spec:
 ```
 
 ### Error handling
-On error proxy returns HTTP status code and JSON response body. JSON is defined using Google's RPC status message. It contains code, message and details. 
+On error, the proxy returns an HTTP status code and JSON response body. JSON is defined using our [Error protobuf message](https://github.com/googleapis/googleapis/blob/master/google/rpc/status.proto). It contains code, message and details.
 
-Backend endpoint can define its own protobufs containing details of error and return it in standard grpc status. Proxy then takes this status and serializes it to JSON response.
+The backend endpoint can define its own protobuf messages containing details of the error and return it in standard grpc status. The proxy takes these messsages and serializes them into JSON response.
 
 ```json
 {

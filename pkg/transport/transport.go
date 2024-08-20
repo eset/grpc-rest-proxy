@@ -21,7 +21,7 @@ type Logger interface {
 
 func NewHandler(reloader *EndpointReloader) http.Handler {
 	routes := chi.NewRouter()
-	routes.HandleFunc("/*", reloader.Handle)
+	routes.Handle("/*", reloader)
 	routes.Get("/status", handleStatus)
 	return routes
 }
