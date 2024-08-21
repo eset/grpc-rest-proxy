@@ -8,7 +8,6 @@ import (
 	"github.com/eset/grpc-rest-proxy/pkg/service/transformer"
 
 	jErrors "github.com/juju/errors"
-	"google.golang.org/protobuf/reflect/protoregistry"
 )
 
 type Match struct {
@@ -20,8 +19,6 @@ type Match struct {
 
 type Router struct {
 	routesByMethod map[MethodType][]routeMatcher
-	// resolver is used to resolve any types that are unknown to proxy.
-	typeResolver *protoregistry.Types
 }
 
 func NewRouter() *Router {
@@ -112,8 +109,4 @@ func (r *Router) Push(route *Route) error {
 
 	r.routesByMethod[route.method] = routes
 	return nil
-}
-
-func (r *Router) Resolver() *protoregistry.Types {
-	return r.typeResolver
 }
