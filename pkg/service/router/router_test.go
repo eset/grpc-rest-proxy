@@ -6,7 +6,7 @@ package router_test
 import (
 	"testing"
 
-	"github.com/eset/grpc-rest-proxy/pkg/transport/router"
+	"github.com/eset/grpc-rest-proxy/pkg/service/router"
 
 	"github.com/stretchr/testify/require"
 	"google.golang.org/genproto/googleapis/api/annotations"

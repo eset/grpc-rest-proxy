@@ -4,8 +4,8 @@
 package router
 
 import (
+	routePattern "github.com/eset/grpc-rest-proxy/pkg/service/router/pattern"
 	"github.com/eset/grpc-rest-proxy/pkg/service/transformer"
-	routePattern "github.com/eset/grpc-rest-proxy/pkg/transport/router/pattern"
 
 	jErrors "github.com/juju/errors"
 )
@@ -25,6 +25,17 @@ func NewRouter() *Router {
 	return &Router{
 		routesByMethod: make(map[MethodType][]routeMatcher),
 	}
+}
+
+func NewRouterWithRoutes(route []*Route) (*Router, error) {
+	r := NewRouter()
+	for _, rt := range route {
+		err := r.Push(rt)
+		if err != nil {
+			return nil, jErrors.Trace(err)
+		}
+	}
+	return r, nil
 }
 
 type routeMatcher struct {

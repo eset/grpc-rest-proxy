@@ -6,13 +6,14 @@ package protoparser
 import (
 	"strings"
 
-	"github.com/eset/grpc-rest-proxy/pkg/transport/router"
+	"github.com/eset/grpc-rest-proxy/pkg/service/router"
 
 	"google.golang.org/protobuf/reflect/protoregistry"
 )
 
 type ParseResult struct {
 	FileRegistry *protoregistry.Files
+	TypeResolver *protoregistry.Types
 	Routes       []*router.Route
 	Errors       []error
 }

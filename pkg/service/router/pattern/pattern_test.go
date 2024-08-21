@@ -7,8 +7,8 @@ import (
 	"slices"
 	"testing"
 
+	"github.com/eset/grpc-rest-proxy/pkg/service/router/pattern"
 	"github.com/eset/grpc-rest-proxy/pkg/service/transformer"
-	"github.com/eset/grpc-rest-proxy/pkg/transport/router/pattern"
 
 	"github.com/stretchr/testify/require"
 )
