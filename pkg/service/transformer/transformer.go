@@ -123,6 +123,10 @@ func GetHTTPStatusCode(code codes.Code) int {
 }
 
 func setHeader(headers http.Header, protoMajor int, name string, values []string) {
+	// content-length header will be not processing
+	if name == headerContentLength {
+		return
+	}
 	// RFC 9113 8.2.2.: endpoint MUST NOT generate an HTTP/2 message containing connection-specific header fields
 	if protoMajor > 1 && isConnectionSpecificHeader(name) {
 		return
