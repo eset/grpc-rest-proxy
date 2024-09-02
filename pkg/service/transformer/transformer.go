@@ -5,6 +5,7 @@ package transformer
 
 import (
 	"context"
+	"encoding/base64"
 	"net/http"
 	"strings"
 
@@ -21,6 +22,8 @@ const (
 	headerAccept        = "accept"
 	headerContentType   = "content-type"
 	headerContentLength = "content-length"
+
+	headerBinarySuffix = "-bin"
 
 	// connection specific headers http1.0/1.1
 	headerConnection       = "connection"
@@ -131,7 +134,14 @@ func setHeader(headers http.Header, protoMajor int, name string, values []string
 	if protoMajor > 1 && isConnectionSpecificHeader(name) {
 		return
 	}
+
+	// RFC 9113 8.2.1.: field values in HTTP prohibit some characters
+	isBinHeader := strings.HasSuffix(name, headerBinarySuffix)
+
 	for _, value := range values {
+		if isBinHeader {
+			value = base64.RawStdEncoding.EncodeToString([]byte(value))
+		}
 		headers.Add(name, value)
 	}
 }
