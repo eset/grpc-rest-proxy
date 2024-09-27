@@ -1,3 +1,5 @@
+name: Docker
+
 on:
   push:
     tags: ["v*.*.*"]
@@ -10,8 +12,8 @@ jobs:
 
       - uses: azure/docker-login@v2
         with:
-          login-server: ${{ secrets.ACR_URL }}
-          username: ${{ secrets.ACR_USERNAME }}
+          login-server: ${{ env.ACR_URL }}
+          username: ${{ env.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
       
       - uses: docker/build-push-action@v6
