@@ -19,4 +19,4 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           push: true        
-          tags: ${{ vars.ACR_URL }}/${{ github.repository }}:${{ steps.meta.outputs.tags || github.sha }}
+          tags: ${{ vars.ACR_URL }}/${{ github.repository }}:${{ steps.meta.outputs.tags || github.sha }}, 'latest'
