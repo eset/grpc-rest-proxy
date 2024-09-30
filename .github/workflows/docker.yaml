@@ -1,0 +1,22 @@
+name: Docker
+
+on:
+  push:
+    tags: 
+      - 'v*.*.*'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/docker-login@v2
+        with:
+          login-server: ${{ vars.ACR_URL }}
+          username: ${{ vars.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+      
+      - uses: docker/build-push-action@v6
+        with:
+          push: true        
+          tags: ${{ vars.ACR_URL }}/grpc-rest-proxy:${{ steps.meta.outputs.tags || github.sha }}, ${{ vars.ACR_URL }}/grpc-rest-proxy:latest
