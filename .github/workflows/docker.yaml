@@ -18,5 +18,5 @@ jobs:
       
       - uses: docker/build-push-action@v6
         with:
-          push: true
-          tags: ${{ vars.ACR_URL }}/${{ github.repository }}:${{ steps.meta.outputs.tags }}
+          push: true        
+          tags: ${{ vars.ACR_URL }}/${{ github.repository }}:${{ steps.meta.outputs.tags || github.sha_short }}
