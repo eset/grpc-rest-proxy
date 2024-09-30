@@ -19,4 +19,4 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           push: true        
-          tags: ${{ vars.ACR_URL }}:${{ steps.meta.outputs.tags || github.sha }}, ${{ vars.ACR_URL }}:latest
+          tags: ${{ vars.ACR_URL }}/grpc-rest-proxy:${{ steps.meta.outputs.tags || github.sha }}, ${{ vars.ACR_URL }}/grpc-rest-proxy:latest
