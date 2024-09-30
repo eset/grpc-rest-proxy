@@ -139,7 +139,7 @@ spec:
               containerPort: 50051
         # gateway that will connnect to service
         - name: grpc-rest-proxy
-          image: "grpc-rest-proxy:latest" # provider your own image
+          image: grpcrestproxy.azurecr.io/grpc-rest-proxy:latest
           command:
             - "/app/grpc-rest-proxy"
           args:
