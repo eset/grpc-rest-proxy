@@ -30,6 +30,7 @@ const (
 	grpcServerAddr                 = "0.0.0.0:50051"
 	tls                            = false
 	tlsSkipverify                  = false
+	defaultUseProtoNames           = false
 	defaultEmitUnpopulated         = false
 	defaultEmitDefaultValues       = false
 )
@@ -61,6 +62,7 @@ func main() {
 	pflag.Bool("gateways.grpc.client.tls", tls, "use TLS for gRPC connection")
 	pflag.Bool("gateways.grpc.client.tlsSkipverify", tlsSkipverify, "skip TLS verification")
 
+	pflag.Bool("service.jsonencoder.useProtoNames", defaultUseProtoNames, "use proto names in JSON response (instead of camel case)")
 	pflag.Bool("service.jsonencoder.emitUnpopulated", defaultEmitUnpopulated, "emit unpopulated fields in JSON response for empty gRPC values")
 	pflag.Bool("service.jsonencoder.emitDefaultValues", defaultEmitDefaultValues, "include default values in JSON response for empty gRPC values") //nolint:lll
 
