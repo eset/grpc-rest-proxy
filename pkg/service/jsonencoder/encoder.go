@@ -12,6 +12,7 @@ import (
 )
 
 type Config struct {
+	UseProtoNames     bool `mapstructure:"UseProtoNames"`
 	EmitUnpopulated   bool `mapstructure:"emitUnpopulated"`
 	EmitDefaultValues bool `mapstructure:"emitDefaultValues"`
 }
@@ -25,6 +26,7 @@ type Encoder struct {
 func New(cfg *Config, typeResolver *protoregistry.Types) Encoder {
 	return Encoder{
 		opts: protojson.MarshalOptions{
+			UseProtoNames:     cfg.UseProtoNames,
 			EmitUnpopulated:   cfg.EmitUnpopulated,
 			EmitDefaultValues: cfg.EmitDefaultValues,
 			Resolver:          typeResolver,

@@ -24,5 +24,5 @@ gateways:
     client:
       targetAddr: "0.0.0.0:50051"
       requestTimeout: 5s
-      tls: true
+      tls: false
       tlsSkipverify: true

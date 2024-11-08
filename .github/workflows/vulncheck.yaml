@@ -11,10 +11,10 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: "1.23"
 
       - id: govulncheck
         uses: golang/govulncheck-action@v1
         with:
-          go-version-input: "1.22"
+          go-version-input: "1.23"
           go-package: ./...

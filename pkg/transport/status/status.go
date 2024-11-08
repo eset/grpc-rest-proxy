@@ -11,7 +11,7 @@ import (
 
 func FromHTTPCode(code int) *Error {
 	return &Error{
-		Code:    int32(code),
+		Code:    int32(code), //nolint:gosec
 		Message: http.StatusText(code),
 	}
 }
@@ -30,7 +30,7 @@ func FromGRPC(status *grpcStatus.Status) *Error {
 	}
 
 	return &Error{
-		Code:    int32(httpStatus),
+		Code:    int32(httpStatus), //nolint:gosec
 		Message: msg,
 		Details: details,
 	}
