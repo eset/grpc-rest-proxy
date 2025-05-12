@@ -48,7 +48,7 @@ issues:
     - linters:
         - stylecheck
       text: "ST1023: should omit type"
-   
+
     - linters:
         - funlen
         - revive
@@ -112,7 +112,6 @@ linters:
   fast: false
 
 linters-settings:
-  shadow: true
   dupl:
     threshold: 100
   errcheck:
@@ -125,9 +124,6 @@ linters-settings:
     statements: 50
   nestif:
     min-complexity: 4
-    goconst:
-    min-len: 2
-    min-occurrences: 2
   gocritic:
     enabled-tags:
       - diagnostic
@@ -145,13 +141,6 @@ linters-settings:
     min-complexity: 15
   goimports:
     local-prefixes: github.com/eset/grpc-rest-proxy
-  golint:
-    min-confidence: 0
-  mnd:
-    settings:
-      mnd:
-        # don't include the "operation" and "assign"
-        checks: argument,case,condition,return
   govet:
     settings:
       printf:
@@ -160,24 +149,13 @@ linters-settings:
           - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
           - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
           - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
-  depguard:
-    list-type: blacklist
-    include-go-root: false
-    packages:
-      - github.com/prometheus/common/log
-    packages-with-error-message:
-      # specify an error message to output when a blacklisted package is used
-      - github.com/prometheus/common/log: "logging is allowed only by github.com/sirupsen/logrus"
   lll:
     line-length: 140
-  maligned:
-    suggest-new: true
   misspell:
     locale: US
     ignore-words:
       - bal
   nolintlint:
-    allow-leading-space: true # don't require machine-readable nolint directives (i.e. with no leading space)
     allow-unused: false # report any unused nolint directives
     require-explanation: false # don't require an explanation for nolint directives
     require-specific: false # don't require nolint directives to be specific about which linter is being skipped
