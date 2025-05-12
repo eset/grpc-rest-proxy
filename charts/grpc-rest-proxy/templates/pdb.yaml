@@ -1,0 +1,16 @@
+{{- if .Values.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "grpc-rest-proxy.fullname" . }}
+  labels:
+    {{- include "grpc-rest-proxy.labels" . | nindent 4 }}
+{{- with .Values.podDisruptionBudget.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+{{- end }}
+spec:
+  maxUnavailable: {{ .Values.podDisruptionBudget.maxUnavailable }}
+  selector:
+    {{- include "grpc-rest-proxy.selectorLabels" . | nindent 4 }}
+{{- end }}
