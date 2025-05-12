@@ -64,7 +64,7 @@ descriptors:
   kind: remote
   remote:
     # overall timeout for connecting and loading all definitions
-    timeout: 1m 
+    timeout: 1m
     reflectionServiceName: grpc.reflection.v1.ServerReflection/ServerReflectionInfo
     # which services we want to exclude from parsing (making them private)
     exclude:
@@ -73,7 +73,7 @@ descriptors:
       - grpc.reflection.v1alpha.ServerReflection
 ```
 
-Proto reflection is allowed by adding following lines: 
+Proto reflection is allowed by adding following lines:
 
 ```diff
     import (
@@ -84,7 +84,7 @@ Proto reflection is allowed by adding following lines:
 	    jErrors "github.com/juju/errors"
 	    "github.com/spf13/pflag"
 	    "google.golang.org/grpc"
-+       "google.golang.org/grpc/reflection" 
++       "google.golang.org/grpc/reflection"
 
 	    pb "github.com/eset/grpc-rest-proxy/cmd/examples/grpcserver/gen/user/v1"
  )
@@ -131,7 +131,7 @@ spec:
     spec:
       containers:
         # main service with enabled grpc reflection
-        - name: service 
+        - name: service
           image: "example-service:latest"
           command:
             - "/app/example-service"
@@ -140,7 +140,7 @@ spec:
               containerPort: 50051
         # gateway that will connnect to service
         - name: grpc-rest-proxy
-          image: grpcrestproxy.azurecr.io/grpc-rest-proxy:latest
+          image: esetgrpcrestproxy.azurecr.io/grpc-rest-proxy:latest
           command:
             - "/app/grpc-rest-proxy"
           args:
